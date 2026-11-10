@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de asistencia</title>
+<style>
+  :root{--bg:#f3f6f4;--card:#fff;--ink:#14231c;--muted:#5b6b63;--accent:#0f6b4f;--line:#cfd9d3;--err:#b3261e}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+    background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{width:100%;max-width:420px;background:var(--card);border-radius:14px;padding:28px 24px;
+    border-top:6px solid var(--accent);box-shadow:0 2px 14px rgba(20,35,28,.08)}
+  h1{font-size:1.6rem;line-height:1.2;margin:0 0 6px}
+  p.sub{margin:0 0 22px;color:var(--muted)}
+  label{display:block;font-weight:600;margin:16px 0 6px}
+  input{width:100%;font:inherit;padding:13px 12px;border:1.5px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  input:focus-visible,button:focus-visible{outline:3px solid #7cc4a8;outline-offset:1px;border-color:var(--accent)}
+  button{width:100%;margin-top:24px;padding:14px;font:inherit;font-weight:700;font-size:1.05rem;
+    color:#fff;background:var(--accent);border:0;border-radius:8px;cursor:pointer}
+  button:disabled{opacity:.6;cursor:wait}
+  .msg{margin-top:14px;min-height:1.3em;color:var(--err);font-size:.95rem}
+  .ok{text-align:center;padding:12px 0}
+  .ok .check{width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;font-size:34px;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .hidden{display:none}
+  a.again{color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;background:none;border:0;width:auto;margin:14px 0 0;padding:0}
+</style>
+</head>
+<body>
+<main>
+  <section id="formView">
+    <h1 id="evento">Registro de asistencia</h1>
+    <p class="sub">Completa tus datos para registrar tu llegada.</p>
+    <form id="f" novalidate>
+      <label for="empresa">Empresa</label>
+      <input id="empresa" name="empresa" autocomplete="organization" required>
+      <label for="nombre">Nombre</label>
+      <input id="nombre" name="nombre" autocomplete="given-name" required>
+      <label for="apellido">Apellido</label>
+      <input id="apellido" name="apellido" autocomplete="family-name" required>
+      <button id="btn" type="submit">Registrarme</button>
+      <div class="msg" id="msg" role="alert"></div>
+    </form>
+  </section>
+  <section id="okView" class="ok hidden">
+    <div class="check">✓</div>
+    <h1>Registro enviado</h1>
+    <p class="sub" id="okText"></p>
+    <button class="again" id="again" type="button">Registrar a otra persona</button>
+  </section>
+</main>
+<script>
+  // ===== CONFIGURACIÓN =====
+  const SCRIPT_URL = "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT";
+  const NOMBRE_EVENTO = "Registro de asistencia"; // cámbialo por el nombre de tu conferencia
+  // =========================
+  document.getElementById("evento").textContent = NOMBRE_EVENTO;
+  document.title = NOMBRE_EVENTO;
+  const f = document.getElementById("f"), btn = document.getElementById("btn"), msg = document.getElementById("msg");
+
+  f.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "";
+    const d = Object.fromEntries(new FormData(f));
+    for (const k in d) d[k] = d[k].trim();
+    if (!d.empresa || !d.nombre || !d.apellido) { msg.textContent = "Completa los tres campos para continuar."; return; }
+    btn.disabled = true; btn.textContent = "Enviando…";
+    try {
+      await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: new URLSearchParams(d) });
+      document.getElementById("okText").textContent = d.nombre + " " + d.apellido + " (" + d.empresa + ")";
+      document.getElementById("formView").classList.add("hidden");
+      document.getElementById("okView").classList.remove("hidden");
+      f.reset();
+    } catch (err) {
+      msg.textContent = "No se pudo enviar. Revisa tu conexión e inténtalo de nuevo.";
+    } finally { btn.disabled = false; btn.textContent = "Registrarme"; }
+  });
+  document.getElementById("again").addEventListener("click", () => {
+    document.getElementById("okView").classList.add("hidden");
+    document.getElementById("formView").classList.remove("hidden");
+  });
+</script>
+</body>
+</html>
